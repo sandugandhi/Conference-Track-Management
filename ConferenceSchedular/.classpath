@@ -4,9 +4,10 @@
 	<classpathentry kind="src" path="res"/>
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/home/sandesh/Desktop/junit-4.11.jar"/>
-	<classpathentry kind="lib" path="/home/sandesh/Desktop/hamcrest-core-1.3.jar"/>
-	<classpathentry kind="lib" path="/home/sandesh/Desktop/jackson-all-1.9.11.jar"/>
-	<classpathentry kind="lib" path="/home/sandesh/Documents/TWAssignment/json-simple-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/home/sandesh/Downloads/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="/home/sandesh/Downloads/hamcrest-core-1.3.jar"/>
+	<classpathentry kind="lib" path="/home/sandesh/Downloads/jackson-core-2.2.3.jar"/>
+	<classpathentry kind="lib" path="/home/sandesh/Downloads/jackson-databind-2.2.3.jar"/>
+	<classpathentry kind="lib" path="/home/sandesh/Downloads/jackson-annotations-2.2.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -60,7 +60,7 @@ public class Schedule {
 		System.out.println("\nOutput : \n");
 		for (Track t : tracklist) {
 			System.out.println("Track : " + t.getID() + "\n");
-			t.printTrack();
+			t.print();
 		}
 		System.out.println("============================");
 	}

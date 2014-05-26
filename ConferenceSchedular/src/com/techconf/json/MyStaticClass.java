@@ -1,15 +1,16 @@
 package com.techconf.json;
-
+/*
 import java.util.Iterator;
 
 import java.util.List;
 import java.util.Map;
-
+*/
 /*
  * 
  *  Purpose : To print the schedule in JSON format and distribute to the client. 
  *  
  * */
+/*
 public class MyStaticClass {
 
 	public static void print(Map m) {
@@ -79,3 +80,4 @@ public class MyStaticClass {
 		}
 	}
 }
+*/

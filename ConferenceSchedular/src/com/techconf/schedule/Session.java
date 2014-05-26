@@ -12,6 +12,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.techconf.json.SessionConfigData;
+import com.techconf.strategy.Strategy;
+
 public class Session {
 	public String getType() {
 		return type;
@@ -57,11 +60,12 @@ public class Session {
 	private String type;
 	private int startTime;
 	private int endTime;  // represents the configured end time of the session
-	private int endSessionTime; // actual end time of the session
+	private static int endSessionTime; // actual end time of the session
 	private List<Talk> talks;
 
 	public void addTalk(Talk t) {
 		talks.add(new Talk(t));
+		calcEndSessionTime();
 	}
 
 	// for session time end calculation
@@ -77,16 +81,16 @@ public class Session {
 
 	public Session(String str) {
 		SessionConfigData d = ScheduleProperties.getSessionConfigData(str);
-		this.id = d.id;
-		this.type = d.name;
-		this.startTime = militaryTimeConverter(d.startTime);
-		this.endTime = militaryTimeConverter(d.endTime);
+		this.id = d.getId();
+		this.type = d.getName();
+		this.startTime = militaryTimeConverter(d.getStartTime());
+		this.endTime = militaryTimeConverter(d.getEndTime());
 		// System.out.println(smilitaryTime +" " +this.startTime);
 		// System.out.println(emilitaryTime +" "+this.endTime);
 		talks = new ArrayList<>();
 	}
 
-	public int militaryTimeConverter(int militaryTime) {
+	public static int militaryTimeConverter(int militaryTime) {
 		Date sdate = null;
 		try {
 			sdate = new SimpleDateFormat("HHmm").parse(String.format("%04d",
@@ -107,8 +111,9 @@ public class Session {
 	 *  or normal File or Console etc
 	 *  TO DO :  Special status for networking and   
 	 * */
-	public void printSession() {
+	public void print() {
 		// TODO Auto-generated method stub
+
 		if ("lunch".equals(this.type)) {
 			int duration = this.endTime - this.startTime;
 			System.out.println(formatTime(this.startTime) + "Lunch " + duration
@@ -119,15 +124,14 @@ public class Session {
 		int currentTime = this.startTime;
 		for (Talk talk : talks) {
 			String s = formatTime(currentTime);
-			System.out.println(s + talk.getTalkTopic() + " "
-					+ talk.getTimeDuration() + "min");
+			talk.print(s);
 			//JSON binding may follow here for JSON output
-		
 			currentTime += talk.getTimeDuration();
 		}
 
 		if ("afternoon".equals(this.type)) {
 			int t = this.calcEndSessionTime();
+			//int t = getEndSessionTime();
 			int minNetworkingStartTime=0;
 			try{
 				minNetworkingStartTime = militaryTimeConverter(Integer
@@ -148,7 +152,7 @@ public class Session {
 		}
 	}
 
-	private String formatTime(int currentTime) {
+	private static String formatTime(int currentTime) {
 		// TODO Auto-generated method stub
 		int hour = currentTime / 60;
 		String dTime;

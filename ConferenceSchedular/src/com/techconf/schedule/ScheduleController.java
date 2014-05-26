@@ -12,6 +12,8 @@ import com.techconf.exception.SchedulerException;
 import com.techconf.schedulelogic.KnapSackSolver;
 import com.techconf.schedulelogic.KnapSackSolverRequest;
 import com.techconf.schedulelogic.KnapSackSolverResponse;
+import com.techconf.strategy.NonTalkSessionStrategy;
+import com.techconf.strategy.TalkSessionStrategy;
 
 /**
  * This class sets the Invited presenters List from ScheduleProperties
@@ -29,14 +31,24 @@ import com.techconf.schedulelogic.KnapSackSolverResponse;
  */
 public class ScheduleController {
 
-	private List<String> inviteeList;
-	private List<Talk> validTalksList;
-
 	public ScheduleController() {
 		// TODO Auto-generated constructor stub
 
 	}
 
+	public List<Talk> getValidTalksList() {
+		return validTalksList;
+	}
+
+	public void setValidTalksList(List<Talk> validTalksList) {
+		this.validTalksList = validTalksList;
+	}
+
+	public void setInviteeList(List<String> inviteeList) {
+		this.inviteeList = inviteeList;
+	}
+
+	
 	public List<String> getInviteeList() {
 		return inviteeList;
 	}
@@ -44,6 +56,8 @@ public class ScheduleController {
 	public void setInviteelist(List<String> inviteeList) {
 		this.inviteeList = inviteeList;
 	}
+	private List<String> inviteeList;
+	private List<Talk> validTalksList;
 
 	/**
 	 * To separate input validating from populating validTalkList Tests:
@@ -100,13 +114,15 @@ public class ScheduleController {
 		try {
 			populateValidTalks(inviteeList);
 			Set<String> s = ScheduleProperties.getSessionConfigDataKeys();
-
 			while (validTalksList.size() > 1) {
 				Iterator<String> iter = s.iterator();
 				Track track = new Track();
 				tracks.add(track);
 				while (iter.hasNext() && validTalksList.size() > 1) {
-					schedule(track, (String) iter.next());
+					String sessionName = (String) iter.next();
+					Session session = track.addNewSession(sessionName);
+					if (sessionName.equals("lunch") || sessionName.equals("networking")){continue;}
+					schedule(session);
 					removeSelectedTalks();
 				}
 			}
@@ -127,12 +143,8 @@ public class ScheduleController {
 		}
 	}
 
-	private void schedule(Track t, String sessionName)
+	private void schedule(Session s)
 			throws SchedulerException {
-
-		Session s = t.addNewSession(sessionName);
-		if (sessionName.equals("lunch") || sessionName.equals("networking"))
-			return;
 		if (validTalksList.size() < 1)
 			return;
 		int W = s.getEndTime() - s.getStartTime();

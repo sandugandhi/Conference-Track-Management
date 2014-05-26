@@ -3,7 +3,11 @@ package com.techconf.schedule;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,10 +15,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import com.techconf.json.BasicContainerFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.techconf.json.SessionConfigData;
 
 /**
  * This class gets the Scheduler global properties from conference.properties
@@ -44,21 +49,56 @@ public class ScheduleProperties {
 		return prop.keySet();
 	}
 
+    static String readFile(final String path, final Charset encoding) throws IOException {
+        final byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return encoding.decode(ByteBuffer.wrap(encoded)).toString();
+    }
+
 	static {
 		ScheduleProperties sp = new ScheduleProperties();
 		prop = new Properties();
 		sessionMap = new LinkedHashMap<String, SessionConfigData>();
 		String filename = "conference.properties";
+		String sessionconfigdata = "res/sessionconfigdata.json";
+		
 		try {
-			prop = sp.getPropertiesFromClasspath(filename);
+			sp.setPropertiesFromClasspath(filename);
+			sp.setSessionDataConfig(sessionconfigdata);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 
 	}
+	private void setSessionDataConfig(String filename)
+	{
+		  ObjectMapper mapper = new ObjectMapper();
+		    List <SessionConfigData> l=null;
+	        try {
+	            l=mapper.readValue(readFile(filename, StandardCharsets.UTF_8), new TypeReference<List <SessionConfigData>>() {});
+	            //System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(l));
+	        } 
+	        catch (JsonParseException jpe)
+	        {
+	        	 jpe.printStackTrace();
+	        }
+	        catch (JsonMappingException jme)
+	        {
+	        	 jme.printStackTrace();
+	        }
+	        catch (final IOException e) {
+	            e.printStackTrace();
+	        }
+	            Iterator<SessionConfigData> listIterator = l.iterator();
+	        	while (listIterator.hasNext()) {
+	        		SessionConfigData s = (SessionConfigData) listIterator.next();
+	        		sessionMap.put(s.getName(), s);
+	        	}   
+	}
+	
 
 	/**
 	 * loads properties file from classpath
@@ -67,7 +107,7 @@ public class ScheduleProperties {
 	 * @return
 	 * @throws IOException
 	 */
-	private Properties getPropertiesFromClasspath(String filename)
+	private void setPropertiesFromClasspath(String filename)
 			throws IOException {
 		try (InputStream input = getClass().getClassLoader()
 				.getResourceAsStream(filename)) {
@@ -75,9 +115,13 @@ public class ScheduleProperties {
 			if (input == null) {
 				System.out.println("ScheduleProperties: "
 						+ "Sorry, unable to find " + filename);
-				return null;
 			}
 			prop.load(input);
+			} catch (IOException ex) {
+					ex.printStackTrace();
+			}
+		  
+	        /*
 			String jsonstr = ScheduleProperties.getProperty("sessions");
 			JSONParser parser = new JSONParser();
 			BasicContainerFactory bcfactory = new BasicContainerFactory();
@@ -121,21 +165,7 @@ public class ScheduleProperties {
 			} catch (ParseException pe) {
 				pe.printStackTrace(System.err);
 			}
-
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-		return prop;
+			*/
 	}
 
-}
-/**
- *  For now, a temporary construct to group the session attributes and store them in a map
- * 	Later, to be moved out of this class file into a separate package
- * **/
-class SessionConfigData {
-	int id;
-	int startTime;
-	int endTime;
-	String name;
 }

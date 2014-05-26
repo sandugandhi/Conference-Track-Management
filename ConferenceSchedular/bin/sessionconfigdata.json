@@ -1,0 +1,7 @@
+[
+	{"id":1,"name":"morning","startTime":900,"endTime":1200},
+	{"id":2,"name":"lunch","startTime":1200,"endTime":1300},
+	{"id":3,"name":"afternoon","startTime":1300,"endTime":1700},
+	{"id":4,"name":"networking","startTime":1600,"endTime":1800}
+]
+

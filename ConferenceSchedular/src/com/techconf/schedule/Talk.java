@@ -9,6 +9,7 @@ public class Talk {
 	private String talkTopic;
 	private int timeDuration;
 	private boolean isIncluded;
+	//private String startTime;
     
     public boolean isIncluded() {
 		return isIncluded;
@@ -59,5 +60,11 @@ public class Talk {
      */
     public String getTalkTopic() {
         return talkTopic;
+    }
+    
+    public void print(String startTime)
+    {
+    	System.out.println(startTime + this.getTalkTopic() + " "
+				+ this.getTimeDuration() + "min");
     }
 }

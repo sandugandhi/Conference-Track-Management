@@ -9,6 +9,8 @@ public class Track {
 	static int count = 0;
 	private final int ID;
 	private List<Session> sessions;
+	
+	
 	public List<Session> getSessions() {
 		return sessions;
 	}
@@ -17,7 +19,7 @@ public class Track {
 		this.sessions = sessions;
 	}
 
-	private int trackEndTime;
+
 
 	public int getID() {
 		// TODO Auto-generated method stub
@@ -35,26 +37,11 @@ public class Track {
 		return s;
 	}
 
-	public void printTrack() {
+	public void print() {
 		// TODO Auto-generated method stub
 
 		for (Session s : sessions) {
-			s.printSession();
+			s.print();
 		}
-
 	}
-
-	public int getTrackEndTime() {
-		return trackEndTime;
-	}
-
-	public void setTrackEndTime(int trackEndTime) {
-		this.trackEndTime = trackEndTime;
-	}
-
-	public void calculateTrackEndTime(Session s) {
-		// TODO Auto-generated method stub
-		s.calcEndSessionTime();
-	}
-
 }
