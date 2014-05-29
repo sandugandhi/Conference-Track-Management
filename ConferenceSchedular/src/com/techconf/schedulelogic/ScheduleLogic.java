@@ -6,9 +6,9 @@ package com.techconf.schedulelogic;
  * 
  **/
 
-public abstract class ScheduleLogic 
-{
+public abstract class ScheduleLogic {
 
-	public abstract void solver(Object request, Object response)throws Exception;
+	public abstract void solver(Object request, Object response)
+			throws Exception;
 
 }

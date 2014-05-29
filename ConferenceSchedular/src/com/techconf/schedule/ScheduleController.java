@@ -1,19 +1,16 @@
 package com.techconf.schedule;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import com.techconf.exception.SchedulerException;
-import com.techconf.schedulelogic.KnapSackSolver;
-import com.techconf.schedulelogic.KnapSackSolverRequest;
-import com.techconf.schedulelogic.KnapSackSolverResponse;
-import com.techconf.strategy.NonTalkSessionStrategy;
-import com.techconf.strategy.TalkSessionStrategy;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.techconf.json.ScheduleConfigData;
+import com.techconf.json.SessionConfigData;
 
 /**
  * This class sets the Invited presenters List from ScheduleProperties
@@ -36,162 +33,42 @@ public class ScheduleController {
 
 	}
 
-	public List<Talk> getValidTalksList() {
-		return validTalksList;
-	}
-
-	public void setValidTalksList(List<Talk> validTalksList) {
-		this.validTalksList = validTalksList;
-	}
-
-	public void setInviteeList(List<String> inviteeList) {
-		this.inviteeList = inviteeList;
-	}
-
-	
-	public List<String> getInviteeList() {
-		return inviteeList;
-	}
-
-	public void setInviteelist(List<String> inviteeList) {
-		this.inviteeList = inviteeList;
-	}
-	private List<String> inviteeList;
 	private List<Talk> validTalksList;
-
-	/**
-	 * To separate input validating from populating validTalkList Tests:
-	 * Inviteelist cannot be null Inviteelist cannot have null rows Inviteelist
-	 * cannot have numbers at more than one place
-	 * **/
-	private void validateInviteeList() {
-		// TODO Auto-generated method stub
-	}
-
-	/**
-	 * Load talk list from input file.
-	 * 
-	 * @param fileName
-	 * @return
-	 */
-	public List<String> setInviteeList(String filename) {
-		if (filename == null || "".equals(filename)) {
-			filename = ScheduleProperties.getProperty("inputfile");
-		}
-		inviteeList = new ArrayList<String>();
-		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-			// Read File Line By Line
-			String strLine;
-			while ((strLine = br.readLine()) != null) {
-				inviteeList.add(strLine);
-			}
-			validateInviteeList();
-			printInviteeList();
-		} catch (Exception e) {// Catch exception if any
-			System.err.println("Error: " + e.getMessage());
-		}
-		return inviteeList;
-	}
-
-	private void printInviteeList() {
-		// TODO Auto-generated method stub
-		System.out.println("Input : \n");
-		for (String s : inviteeList) {
-			System.out.println(s);
-		}
-		System.out.println("");
-	}
+	private Log log = LogFactory.getLog(ScheduleController.class);
 
 	/**
 	 * The purpose of this method is to get the populated Tracks list to the
 	 * Schedule
 	 * 
+	 * @throws Exception
+	 * 
 	 * **/
-	public List<Track> getTrackList() {
+	public List<Track> getTrackList(List<String> inviteeList) throws Exception {
 
 		// TODO Auto-generated method stub
 		List<Track> tracks = new ArrayList<Track>();
 		try {
 			populateValidTalks(inviteeList);
-			Set<String> s = ScheduleProperties.getSessionConfigDataKeys();
-			while (validTalksList.size() > 1) {
-				Iterator<String> iter = s.iterator();
+			List<SessionConfigData> sessionlist = ScheduleConfigurator
+					.getScheduleConfigData().getSessionlist();
+			while (validTalksList.size() > 0) {
+				Iterator<SessionConfigData> iter = sessionlist.iterator();
 				Track track = new Track();
 				tracks.add(track);
-				while (iter.hasNext() && validTalksList.size() > 1) {
-					String sessionName = (String) iter.next();
-					Session session = track.addNewSession(sessionName);
-					if (sessionName.equals("lunch") || sessionName.equals("networking")){continue;}
-					schedule(session);
-					removeSelectedTalks();
+				while (iter.hasNext()) {
+					SessionConfigData session = (SessionConfigData) iter.next();
+					SessionContext sc = new SessionContext();
+					SuperSession supersession = sc.getSessionfromType(session);
+					track.addNewSession(supersession);
+					if (validTalksList.size() > 0)
+						supersession.schedule(validTalksList);
 				}
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			log.debug("Exception in ScheduleController::getTrackList");
 			e.printStackTrace();
 		}
 		return tracks;
-	}
-
-	private void removeSelectedTalks() {
-		for (ListIterator<Talk> iter = validTalksList.listIterator(); iter
-				.hasNext();) {
-			Talk a = iter.next();
-			if (a.isIncluded()) {
-				iter.remove();
-			}
-		}
-	}
-
-	private void schedule(Session s)
-			throws SchedulerException {
-		if (validTalksList.size() < 1)
-			return;
-		int W = s.getEndTime() - s.getStartTime();
-		int N = validTalksList.size();
-
-		int[] profit = new int[N + 1];
-		int[] weight = new int[N + 1];
-		int i = 1;
-		for (Talk proft : validTalksList) {
-			weight[i] = proft.getTimeDuration();
-			i++;
-		}
-		i = 1;
-		for (Talk wght : validTalksList) {
-			profit[i] = wght.getTimeDuration();
-			i++;
-		}
-		KnapSackSolverRequest req = new KnapSackSolverRequest();
-		req.setMaxKnapSackSize(W);
-		req.setNumSize(N);
-		req.setProfit(profit);
-		req.setWeight(weight);
-		KnapSackSolverResponse res = new KnapSackSolverResponse();
-		boolean[] take;
-		KnapSackSolver knapSolver = new KnapSackSolver();
-		try {
-			knapSolver.solver(req, res);
-		} catch (IndexOutOfBoundsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NullPointerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		take = res.getTake();
-		i = 1;
-		for (Talk talk : validTalksList) {
-			if (take[i]) {
-				talk.setIncluded(true);
-				s.addTalk(talk);
-			}
-			i++;
-		}
-		return;
 	}
 
 	/**
@@ -201,80 +78,59 @@ public class ScheduleController {
 	 * @param talkList
 	 * @throws Exception
 	 */
+
 	private void populateValidTalks(List<String> talkList) throws Exception {
 		// If talksList is null throw exception invalid list to schedule.
-		if (talkList == null) {
-			throw new SchedulerException("Empty Talk List");
+		if (talkList == null || talkList.isEmpty()) {
+			log.warn("Input talklist is either not set or empty");
+			return;
 		}
 
 		validTalksList = new ArrayList<Talk>();
-		validTalksList.add(new Talk("dummy", 0)); // for knapSack index will
-		// start from 1
-		String minSuffix = "min";
-		String lightningSuffix = "lightning";
-		int maxTalkTime = 0, minTalkTime = 0;
-		try {
-			maxTalkTime = Integer.parseInt(ScheduleProperties
-					.getProperty("maxTalkMinutes"));
-			minTalkTime = Integer.parseInt(ScheduleProperties
-					.getProperty("minTalkMinutes"));
-		} catch (NumberFormatException nfe) {
-			throw new SchedulerException(
-					"Unable to parse time range from properties file");
-		}
+		ScheduleConfigData scd = ScheduleConfigurator.getScheduleConfigData();
+
+		int maxTalkTime = scd.getMaxTalkMinutes();
+		int minTalkTime = scd.getMinTalkMinutes();
+		int talktime = 0;
 		// Iterate list and validate time.
 		for (String talk : talkList) {
 			talk = talk.replaceAll("\\s+", " ").trim();
-			// System.out.println("["+talk+"]");
-			if (talk.length() < 6) // minimum length could be "a 1min"
-			{ // Just ignore bad input and continue. Don't throw exception or
-				// terminate
+			Pattern pattern = Pattern
+					.compile("(.*)(\\s){1}([0-2]?[0-9]?[0-9]{1}min|lightning)\\b");
+			Matcher matcher = pattern.matcher(talk);
+			if (!matcher.matches()) {
+				log.warn("Talk:[" + talk
+						+ "] was ignored. Check whether it is valid");
 				continue;
 			}
-			int lastSpaceIndex = talk.lastIndexOf(" ");
-			// if talk does not have any space, means either title or time is
-			// missing.
-			if (lastSpaceIndex == -1) {
-				throw new SchedulerException("Invalid talk, " + talk
-						+ ". Talk time must be specified.");
-			}
 
-			String name = talk.substring(0, lastSpaceIndex);
-			String timeStr = talk.substring(lastSpaceIndex + 1);
-			// If title is missing or blank.
-			if (name == null || "".equals(name.trim())) {
-				throw new SchedulerException("Invalid talk name, " + talk);
-			}
-			// If time is not ended with min or lightning.
-			else if (!timeStr.endsWith(minSuffix)
-					&& !timeStr.endsWith(lightningSuffix)) {
-				throw new SchedulerException("Invalid talk time, " + talk
-						+ ". Time must be in min or in lightning");
-			}
-			int time = 0;
-			// Parse time from the time string .
-			try {
-				if (timeStr.endsWith(minSuffix)) {
-					time = Integer.parseInt(timeStr.substring(0,
-							timeStr.indexOf(minSuffix)));
-				} else if (timeStr.endsWith(lightningSuffix)) {
-					time = Integer.parseInt(ScheduleProperties
-							.getProperty("lightningMinutes"));
-				}
-			} catch (NumberFormatException nfe) {
-				throw new SchedulerException(
-						"populateValidTalks : Error in parsing the properties file"
-								+ " or input configuration file");
-			}
-
-			if (time <= maxTalkTime && time >= minTalkTime) {
+			talktime = calculateTalkTime(matcher.group(3));
+			if (talktime <= maxTalkTime && talktime >= minTalkTime) {
 				// Add talk to the valid talk List.
-				validTalksList.add(new Talk(name, time));
+				validTalksList.add(new Talk(matcher.group(1), talktime));
 				// System.out.println("Considering : " + name);
 			} else {
-				// System.out.println("Ignoring : " + name);
+				log.warn("Talk:[" + talk
+						+ "] was ignored. The talk time was out of bounds");
 			}
 		}
-		return;
+	}
+
+	private int calculateTalkTime(String endingStr) {
+		ScheduleConfigData scd = ScheduleConfigurator.getScheduleConfigData();
+		String minuteSuffix = scd.getMinuteSuffix();
+		String lightningSuffix = scd.getLightningSuffix();
+		int talktime = 0;
+		try {
+			if (endingStr.endsWith(minuteSuffix)) {
+				talktime = Integer.parseInt(endingStr.substring(0,
+						endingStr.indexOf(minuteSuffix)));
+			} else if (endingStr.endsWith(lightningSuffix)) {
+				talktime = scd.getLightningMinutes();
+			}
+		} catch (NumberFormatException nfe) {
+			nfe.printStackTrace();
+		}
+		return talktime;
 	}
 }

@@ -1,7 +1,7 @@
 package com.techconf.schedulelogic;
 
 public class KnapSackSolverRequest {
-	
+
 	public int[] getProfit() {
 		return profit;
 	}
@@ -38,7 +38,7 @@ public class KnapSackSolverRequest {
 	private int weight[];
 	private int numSize;
 	private int MaxKnapSackSize;
-	
+
 	public KnapSackSolverRequest() {
 		// TODO Auto-generated constructor stub
 
